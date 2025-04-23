@@ -20,10 +20,11 @@
 </head>
 <body>
     <iframe 
-        src="/" 
+        src="/?secure=true" 
         class="chatbot-container"
         title="HVGA Chatbot"
-        allow="microphone"
+        allow="microphone *"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads allow-modals"
     ></iframe>
 </body>
 </html> 

@@ -295,27 +295,44 @@
 
         async function initializeSpeechRecognition() {
             try {
-                // Check if we're in a secure context
+                // Check if we're in a secure context or embedded
                 const urlParams = new URLSearchParams(window.location.search);
-                const isSecure = urlParams.get('secure') === 'true' || window.location.hostname === 'localhost' || window.location.protocol === 'https:';
+                const isSecure = urlParams.get('secure') === 'true' || 
+                               window.location.protocol === 'https:' || 
+                               window.location.hostname === 'localhost' ||
+                               window.location.hostname === '127.0.0.1';
                 
-                if (!isSecure) {
+                const isEmbedded = window.self !== window.top;
+                
+                console.log('Context check:', {
+                    isSecure,
+                    isEmbedded,
+                    protocol: window.location.protocol,
+                    hostname: window.location.hostname
+                });
+
+                if (!isSecure && !isEmbedded) {
                     console.log('Not in a secure context, speech recognition disabled');
                     voiceButton.style.display = 'none';
                     return;
                 }
 
-                if ('webkitSpeechRecognition' in window) {
-                    recognition = new webkitSpeechRecognition();
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+                    recognition = new SpeechRecognition();
                     recognition.continuous = false;
                     recognition.interimResults = false;
                     recognition.lang = 'en-US';
 
                     // Request microphone permission explicitly
                     try {
-                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                        stream.getTracks().forEach(track => track.stop()); // Stop the stream right away, we just needed the permission
+                        const stream = await navigator.mediaDevices.getUserMedia({ 
+                            audio: true,
+                            video: false
+                        });
+                        stream.getTracks().forEach(track => track.stop()); // Stop the stream right away
                         console.log('Microphone permission granted');
+                        voiceButton.style.display = 'flex';
                     } catch (error) {
                         console.error('Microphone permission denied:', error);
                         voiceButton.style.display = 'none';
@@ -348,9 +365,6 @@
                         voiceButton.classList.remove('recording');
                         voiceButton.querySelector('svg').style.fill = '#666';
                     };
-
-                    // Keep voice button visible since everything is initialized properly
-                    voiceButton.style.display = 'flex';
                 } else {
                     console.log('Web Speech API not supported');
                     voiceButton.style.display = 'none';
@@ -474,10 +488,18 @@
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
             
-            // Replace bullet points with line breaks and preserve formatting
-            const formattedContent = content
-                .replace(/•/g, '\n•') // Add line break before each bullet point
-                .replace(/\n+/g, '\n') // Remove multiple line breaks
+            // Format bullet points and preserve formatting
+            let formattedContent = content
+                .split('\n')
+                .map(line => {
+                    // Add proper spacing for bullet points
+                    if (line.trim().startsWith('•')) {
+                        // Ensure consistent spacing after bullet points
+                        return line.replace(/^(\s*•\s*)/, '• ').trim();
+                    }
+                    return line;
+                })
+                .join('\n')
                 .trim();
             
             // Create a pre element to preserve whitespace and line breaks
@@ -486,6 +508,14 @@
             pre.style.wordWrap = 'break-word';
             pre.style.margin = '0';
             pre.style.fontFamily = 'inherit';
+            pre.style.lineHeight = '1.5';
+            pre.style.padding = '0';
+            
+            // Additional styling for bullet points
+            if (formattedContent.includes('•')) {
+                pre.style.paddingLeft = '0.5em';
+            }
+            
             pre.textContent = formattedContent;
             
             messageDiv.appendChild(pre);
