@@ -6,6 +6,7 @@ import MistralClient from '@mistralai/mistralai';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import multer from 'multer';
 import { tools } from './tools/index.js';
 import configRouter from './routes/config.js';
 import { Anthropic } from '@anthropic-ai/sdk';
@@ -29,6 +30,14 @@ app.use(cors({
 app.options('*', cors());
 
 app.use(express.json());
+
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  }
+});
 
 // Serve static files from the public directory
 app.use(express.static(path.join(__dirname, 'public')));
@@ -377,6 +386,100 @@ app.post('/api/chat', async (req, res) => {
     console.error('Error:', error);
     res.status(500).json({ error: 'Failed to process request' });
   }
+});
+
+app.post('/api/speech-to-text', upload.single('audio'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No audio file provided' });
+    }
+
+    // First try Web Speech API
+    try {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      const transcript = await new Promise((resolve, reject) => {
+        recognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          resolve(transcript);
+        };
+
+        recognition.onerror = (event) => {
+          reject(new Error(`Web Speech API error: ${event.error}`));
+        };
+
+        // Convert the audio buffer to a Blob and create an object URL
+        const audioBlob = new Blob([req.file.buffer], { type: 'audio/webm;codecs=opus' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        // Create an audio element and play it
+        const audio = new Audio(audioUrl);
+        audio.onended = () => {
+          recognition.stop();
+          URL.revokeObjectURL(audioUrl);
+        };
+        
+        recognition.start();
+        audio.play();
+      });
+
+      return res.json({ text: transcript });
+    } catch (webSpeechError) {
+      console.log('Web Speech API failed, falling back to Deepgram:', webSpeechError);
+      
+      // Fallback to Deepgram
+      const audioBuffer = req.file.buffer;
+      const response = await fetch('https://api.deepgram.com/v1/listen?language=multi&smart_format=true&model=nova-2', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${process.env.DEEPGRAM_API_KEY}`,
+          'Content-Type': 'audio/webm;codecs=opus'
+        },
+        body: audioBuffer
+      });
+
+      if (!response.ok) {
+        console.error('Deepgram API error:', await response.text());
+        throw new Error(`Deepgram API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.results?.channels?.[0]?.alternatives?.[0]?.transcript) {
+        res.json({ text: data.results.channels[0].alternatives[0].transcript });
+      } else {
+        res.json({ text: '' });
+      }
+    }
+  } catch (error) {
+    console.error('Speech-to-text error:', error);
+    res.status(500).json({ error: 'Failed to process speech-to-text' });
+  }
+});
+
+// Add response formatting middleware
+app.use((req, res, next) => {
+  const originalJson = res.json;
+  res.json = function(data) {
+    if (data.tournament && data.type === 'results') {
+      const { tournament } = data;
+      const formattedResponse = {
+        date: tournament.date,
+        venue: tournament.venue,
+        winners: tournament.winners.map(winner => ({
+          flight: winner.flight,
+          type: winner.type,
+          name: winner.name,
+          score: winner.score
+        }))
+      };
+      return originalJson.call(this, formattedResponse);
+    }
+    return originalJson.call(this, data);
+  };
+  next();
 });
 
 // Serve index.html for the root route

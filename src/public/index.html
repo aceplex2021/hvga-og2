@@ -8,11 +8,12 @@
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
             background-color: #f5f5f5;
+            box-sizing: border-box;
         }
         .chat-container {
             max-width: 800px;
@@ -24,6 +25,8 @@
             background-color: white;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
         }
         .chat-header {
             padding: 15px;
@@ -220,6 +223,24 @@
         #user-input:focus {
             border-color: #007bff;
         }
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+            .chat-container {
+                margin: 0;
+                border-radius: 8px;
+            }
+            .chat-header {
+                padding: 10px;
+            }
+            .chat-messages {
+                padding: 10px;
+            }
+            .input-container {
+                padding: 8px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -302,7 +323,7 @@
                                window.location.hostname === 'localhost' ||
                                window.location.hostname === '127.0.0.1';
                 
-                const isEmbedded = window.self !== window.top;
+                const isEmbedded = urlParams.get('embedded') === 'true' || window.self !== window.top;
                 
                 console.log('Context check:', {
                     isSecure,

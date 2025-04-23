@@ -10,21 +10,67 @@
             padding: 0;
             height: 100vh;
             overflow: hidden;
+            position: relative;
         }
         .chatbot-container {
-            width: 100%;
+            width: 95%; /* Reduce width slightly */
             height: 100%;
             border: none;
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            margin-left: 20px; /* Add margin to move right */
+        }
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            background: #1a73e8;
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 20px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        .close-button:hover {
+            background: #1557b0;
+            transform: scale(1.1);
+        }
+        @media (max-width: 768px) {
+            .chatbot-container {
+                width: 92%; /* Reduce width more on mobile */
+                margin-left: 25px; /* Increase margin on mobile */
+            }
         }
     </style>
 </head>
 <body>
+    <button class="close-button" onclick="window.parent.postMessage('close-chat', '*')">×</button>
     <iframe 
-        src="/?secure=true" 
+        src="/?secure=true&embedded=true" 
         class="chatbot-container"
         title="HVGA Chatbot"
         allow="microphone *"
-        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads allow-modals"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads allow-modals allow-microphone"
     ></iframe>
+    <script>
+        // Listen for messages from the parent window
+        window.addEventListener('message', (event) => {
+            if (event.data === 'toggle-chat') {
+                const closeButton = document.querySelector('.close-button');
+                if (closeButton) {
+                    closeButton.style.transform = closeButton.style.transform === 'rotate(45deg)' ? 'none' : 'rotate(45deg)';
+                }
+            }
+        });
+    </script>
 </body>
 </html> 
