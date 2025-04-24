@@ -830,6 +830,17 @@
                 return 'Sorry, there was an error processing your request.';
             }
         }
+
+        // Add browser history management
+        window.onpopstate = () => {
+            const returnUrl = new URLSearchParams(window.location.search).get('return');
+            if (returnUrl) {
+                window.location.href = returnUrl;
+            }
+        };
+
+        // Add initial state to history
+        window.history.pushState({}, '', window.location.href);
     </script>
 </body>
 </html> 

@@ -45,6 +45,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Add config route
 app.use('/api', configRouter);
 
+// Add return URL handling middleware
+app.use((req, res, next) => {
+  const returnUrl = req.query.return;
+  if (returnUrl) {
+    res.locals.returnUrl = returnUrl;
+  }
+  next();
+});
+
 // Initialize AI clients
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
