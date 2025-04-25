@@ -62,14 +62,25 @@ const openai = new OpenAI({
 const mistral = new MistralClient(process.env.MISTRAL_API_KEY);
 
 // Load knowledge base
-const knowledgeBase = await fs.readFile(
-  path.join(__dirname, '../Houston Vietnamese Golf Association.txt'),
-  'utf-8'
-);
+let knowledgeBase;
+try {
+  knowledgeBase = await fs.readFile(
+    path.join(__dirname, '../Houston Vietnamese Golf Association.txt'),
+    'utf-8'
+  );
+  console.log('Knowledge base loaded successfully. Length:', knowledgeBase.length);
+} catch (error) {
+  console.error('Error loading knowledge base:', error);
+  knowledgeBase = 'Error loading knowledge base file.';
+}
 
 const systemPrompt = `You are a helpful assistant for the Houston Vietnamese Golf Association (HVGA). 
-You have access to the following tools:
+You have access to the following tools and knowledge base:
 
+KNOWLEDGE BASE:
+${knowledgeBase}
+
+TOOLS:
 1. get_members_profile: Use this tool to get information about HVGA members.
    - When a user asks about a member's handicap, scores, or any member-specific information
    - When a user asks about tournament scores for a specific member
@@ -85,10 +96,52 @@ You have access to the following tools:
    - When a user asks about tournament results for the Texas Cup
    - Format the response with clear sections for each flight
 
-Always verify tournament details from the knowledge base before responding.
-Format responses with bullet points and clear sections.
-Do not make assumptions about data not provided.
-If you're unsure about something, say so rather than guessing.`;
+3. get_date: Use this tool to handle date-related queries.
+   - When a user asks about relative dates (e.g., "two weeks from now")
+   - When a user asks about date calculations
+   - DO NOT use this tool for tournament schedule questions - use the knowledge base instead
+
+RESPONSE GUIDELINES:
+1. For questions about HVGA policies, rules, or general information:
+   - First check the knowledge base
+   - If the information is in the knowledge base, use it directly
+   - If not, say you don't have that information
+
+2. For questions about tournament schedule:
+   - ALWAYS use the knowledge base first
+   - The tournament schedule is in the knowledge base under "Tournament Schedule"
+   - Do not use the get_date tool for these questions
+   - Example: For "when's the next tournament", look at the tournament schedule in the knowledge base
+   - Format the response with the date, time, location, and cost
+
+3. For questions about members or tournament results:
+   - Use the appropriate tool to get the information
+   - Combine the tool results with knowledge base context
+   - Format the response clearly with bullet points and sections
+
+4. For date-related questions (not about tournament schedule):
+   - Use the get_date tool to handle the date logic
+   - Provide clear, formatted dates and times
+
+5. Always:
+   - Format responses with bullet points and clear sections
+   - Do not make assumptions about data not provided
+   - If you're unsure about something, say so rather than guessing
+   - When using tool results, explain what you found
+   - When using knowledge base information, cite the relevant section
+
+EXAMPLES:
+1. For "when's the next tournament":
+   - Check the tournament schedule in the knowledge base
+   - Respond with: "The next tournament is on [date] at [location] at [time]. Cost: [amount]"
+
+2. For "what are the membership fees":
+   - Check the membership section in the knowledge base
+   - Respond with the exact fees listed
+
+3. For "what's my handicap":
+   - Use the get_members_profile tool
+   - Include relevant handicap information from the knowledge base`;
 
 // Initialize conversation history
 let conversationHistory = [
@@ -115,7 +168,10 @@ app.post('/api/chat', async (req, res) => {
       // Try GPT-3.5 Turbo first
       const openaiResponse = await openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
-        messages: conversationHistory,
+        messages: [
+          { role: 'system', content: systemPrompt + '\n\nKnowledge Base:\n' + knowledgeBase },
+          ...conversationHistory.slice(1) // Skip the original system prompt since we're including it with knowledge base
+        ],
         max_tokens: 1000,
         temperature: 0.7,
         tools: tools.map(tool => ({
@@ -158,7 +214,10 @@ app.post('/api/chat', async (req, res) => {
           // Get final response with tool results
           const finalResponse = await openai.chat.completions.create({
             model: 'gpt-3.5-turbo',
-            messages: conversationHistory,
+            messages: [
+              { role: 'system', content: systemPrompt + '\n\nKnowledge Base:\n' + knowledgeBase },
+              ...conversationHistory.slice(1) // Skip the original system prompt
+            ],
             max_tokens: 1000,
             temperature: 0.7
           });
@@ -189,7 +248,7 @@ app.post('/api/chat', async (req, res) => {
         model: 'claude-3-haiku-20240307',
         max_tokens: 150,
         temperature: 0.7,
-        system: systemPrompt,
+        system: systemPrompt + '\n\nKnowledge Base:\n' + knowledgeBase,
         messages: [{ role: 'user', content: message }]
       });
 
