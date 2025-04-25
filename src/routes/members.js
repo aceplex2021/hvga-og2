@@ -1,24 +1,30 @@
 import express from 'express';
-import fetch from 'node-fetch';
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 const router = express.Router();
 
-const MEMBERS_PROFILE_URL = process.env.MEMBERS_PROFILE_URL;
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
 
 router.get('/', async (req, res) => {
   try {
-    const response = await fetch(MEMBERS_PROFILE_URL, {
-      headers: {
-        'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY}`
-      }
-    });
+    const { data: members, error } = await supabase
+      .from('members')
+      .select('*')
+      .order('name');
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    if (error) {
+      throw error;
     }
 
-    const data = await response.json();
-    res.json(data);
+    res.json(members);
   } catch (error) {
     console.error('Error fetching members:', error);
     res.status(500).json({ error: 'Failed to fetch members data' });
