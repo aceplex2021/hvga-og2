@@ -8,7 +8,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
 import { tools } from './tools/index.js';
-import configRouter from './routes/config.js';
 import membersRouter from './routes/members.js';
 import { Anthropic } from '@anthropic-ai/sdk';
 
@@ -42,9 +41,6 @@ const upload = multer({
 
 // Serve static files from the public directory
 app.use(express.static(path.join(__dirname, 'public')));
-
-// Add config route
-app.use('/api', configRouter);
 
 // Add members route
 app.use('/api/members', membersRouter);
