@@ -2,94 +2,86 @@ import fetch from 'node-fetch';
 import { ToolDefinition } from '../types/tool';
 
 interface MemberProfile {
-  id: string;
   name: string;
-  currentStatus: 'M' | 'NVM' | 'inactive';
-  isSenior: boolean;
-  handicap: number;
+  status: 'active' | 'inactive' | 'pending';
   flight: string;
-  tournamentScores: Array<{
-    date: string;
-    score: number;
-    tournamentName: string;
-  }>;
-  totalRounds: number;
+  handicap: number;
+  memberSince: string;
 }
 
-interface MembersResponse {
-  members: MemberProfile[];
+async function getMemberProfile(memberName: string): Promise<MemberProfile | null> {
+  try {
+    const url = process.env.MEMBER_PROFILE_URL;
+    const anonKey = process.env.SUPABASE_ANON_KEY;
+    
+    if (!url || !anonKey) {
+      console.error('Missing required environment variables');
+      return null;
+    }
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${anonKey}`,
+        'apikey': anonKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ name: memberName })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch member profile: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.profile || null;
+  } catch (error) {
+    console.error('Error fetching member profile:', error);
+    return null;
+  }
 }
 
-export const getMembersProfile: ToolDefinition = {
+export const getMembersProfileTool: ToolDefinition = {
   name: 'get_members_profile',
-  description: 'Get member profiles including their tournament scores and statistics',
+  description: 'Use this tool ONLY for questions about a specific member\'s current status, flight, or handicap. DO NOT use for questions about membership rules, fees, or general policies.',
   parameters: {
     type: 'object',
     properties: {
       memberName: {
         type: 'string',
-        description: 'Name of the member to look up (optional)'
+        description: 'Full name of the member to look up'
       }
     },
-    required: []
+    required: ['memberName']
   },
-  handler: async (params: { memberName?: string }): Promise<{ message: string }> => {
-    try {
-      const response = await fetch('https://kddbyrxuvtqgumvndphi.supabase.co/functions/v1/members-profile', {
-        headers: {
-          'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data: MembersResponse = await response.json();
-
-      if (params.memberName) {
-        // Search for specific member
-        const member = data.members.find(m => 
-          m.name.toLowerCase().includes(params.memberName!.toLowerCase())
-        );
-
-        if (!member) {
-          return { message: `No member found with name containing "${params.memberName}"` };
-        }
-
-        return {
-          message: formatMemberProfile(member)
-        };
-      }
-
-      // Return all members if no specific name provided
+  handler: async (params) => {
+    console.log('Member profile tool called with params:', params);
+    
+    if (!params?.memberName) {
       return {
-        message: data.members.map(formatMemberProfile).join('\n\n')
+        message: "Please provide a member's name to look up their profile."
       };
-    } catch (error) {
-      console.error('Error fetching members:', error);
-      return { message: 'Failed to fetch members data' };
     }
+
+    const profile = await getMemberProfile(params.memberName);
+    
+    if (!profile) {
+      return {
+        message: `I couldn't find a profile for ${params.memberName}. Please verify the name and try again.`
+      };
+    }
+
+    const statusMessage = profile.status === 'active' 
+      ? 'is an active member'
+      : profile.status === 'pending'
+      ? 'has a pending membership'
+      : 'is not currently an active member';
+
+    return {
+      message: `${profile.name} ${statusMessage} of HVGA.\n` +
+               `Flight: ${profile.flight}\n` +
+               `Current Handicap: ${profile.handicap}\n` +
+               `Member Since: ${new Date(profile.memberSince).toLocaleDateString()}`
+    };
   }
-};
-
-function formatMemberProfile(member: MemberProfile): string {
-  const status = member.currentStatus === 'M' ? 'Member' :
-                 member.currentStatus === 'NVM' ? 'Non-Voting Member' :
-                 'Inactive';
-
-  const scores = member.tournamentScores
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5) // Show last 5 scores
-    .map(score => `• ${score.tournamentName} (${score.date}): ${score.score}`)
-    .join('\n');
-
-  return `• Name: ${member.name}
-• Status: ${status}
-• Division: ${member.isSenior ? 'Senior' : 'Regular'}
-• Handicap: ${member.handicap || 'N/A'}
-• Flight: ${member.flight || 'N/A'}
-• Total Rounds: ${member.totalRounds}
-Recent Scores:
-${scores}`;
-} 
+}; 

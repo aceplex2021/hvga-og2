@@ -6,22 +6,15 @@ interface TXCupStanding {
   totalScore: number;
 }
 
-async function getTxCupStandings(): Promise<TXCupStanding[]> {
+async function getTxCupStandings() {
   try {
     const url = process.env.TX_CUP_STANDINGS_URL;
     const anonKey = process.env.SUPABASE_ANON_KEY;
     
-    console.log('TX Cup URL:', url);
-    console.log('Has Anon Key:', !!anonKey);
-
     if (!url || !anonKey) {
-      console.error('Missing required environment variables:');
-      console.error('TX_CUP_STANDINGS_URL:', !!url);
-      console.error('SUPABASE_ANON_KEY:', !!anonKey);
+      console.error('Missing required environment variables');
       return [];
     }
-
-    console.log('Attempting to fetch TX Cup standings...');
     
     const response = await fetch(url, {
       method: 'GET',
@@ -31,29 +24,13 @@ async function getTxCupStandings(): Promise<TXCupStanding[]> {
         'Content-Type': 'application/json'
       }
     });
-
-    console.log('Response status:', response.status);
     
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error response:', errorText);
       throw new Error(`Failed to fetch standings: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('Response data:', data);
-    
-    if (!data.standings) {
-      console.warn('No standings found in response data');
-      return [];
-    }
-
-    // Filter out entries with null totalScore
-    const validStandings = data.standings.filter(
-      (standing: TXCupStanding) => standing.totalScore !== null
-    );
-
-    return validStandings;
+    return data.standings || [];
   } catch (error) {
     console.error('Error fetching TX Cup standings:', error);
     return [];
@@ -62,13 +39,17 @@ async function getTxCupStandings(): Promise<TXCupStanding[]> {
 
 export const getTxCupStandingsTool: ToolDefinition = {
   name: 'get_tx_cup_standings',
-  description: 'Fetches the current TX Cup standings from the HVGA database',
+  description: 'Use this tool ONLY for questions about current TX Cup rankings, points, or qualification status. DO NOT use for questions about TX Cup rules, schedule, or format.',
   parameters: {
     type: 'object',
     properties: {
       topN: {
         type: 'number',
-        description: 'Number of top players to return'
+        description: 'Number of top players to return (optional)'
+      },
+      playerName: {
+        type: 'string',
+        description: 'Specific player name to look up (optional)'
       }
     },
     required: []
@@ -76,16 +57,32 @@ export const getTxCupStandingsTool: ToolDefinition = {
   handler: async (params) => {
     console.log('TX Cup standings tool called with params:', params);
     const standings = await getTxCupStandings();
-    console.log('Received standings:', standings);
     
     if (standings.length === 0) {
       return {
-        message: "I don't have access to real-time data or updates on the current standings for the TX Cup. For the latest updates, please refer to the HVGA official website or contact Jesse Nguyen, the TX Cup Captain."
+        message: "I don't have access to the current TX Cup standings at the moment. For the latest updates, please check the HVGA website or contact the TX Cup Captain."
       };
     }
 
-    // Get top N players (default to 3 if not specified)
-    const topN = params?.topN || 3;
+    // If looking up a specific player
+    if (params?.playerName) {
+      const player = standings.find(p => 
+        p.name.toLowerCase() === params.playerName.toLowerCase()
+      );
+      
+      if (!player) {
+        return {
+          message: `I couldn't find ${params.playerName} in the current TX Cup standings.`
+        };
+      }
+      
+      return {
+        message: `${player.name} is currently ranked ${player.position} in the TX Cup with ${player.totalScore} points.`
+      };
+    }
+
+    // Get top N players (default to all if not specified)
+    const topN = params?.topN || standings.length;
     const topPlayers = standings.slice(0, topN);
 
     const formattedStandings = topPlayers
