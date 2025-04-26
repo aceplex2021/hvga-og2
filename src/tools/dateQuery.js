@@ -2,7 +2,7 @@ import { getTodayDate } from './dateUtils.js';
 import { formatDate, parseDate, getRelativeTimeExpression, getDateFromExpression } from './dateUtils.js';
 
 export const name = 'get_date';
-export const description = 'Get the current date or handle date-related queries';
+export const description = 'Get the current date or handle date-related queries. DO NOT use for questions about tournament schedules or event dates.';
 
 export async function handler(parameters = {}) {
   try {
@@ -18,6 +18,13 @@ export async function handler(parameters = {}) {
     
     // Handle relative time expressions
     if (relativeTime) {
+      // Skip special handling for tournament-related queries
+      if (relativeTime.toLowerCase().includes('tournament')) {
+        return {
+          message: "For tournament schedule questions, please refer to the HVGA knowledge base."
+        };
+      }
+      
       const expression = getRelativeTimeExpression(relativeTime);
       if (expression) {
         const date = getDateFromExpression(expression);

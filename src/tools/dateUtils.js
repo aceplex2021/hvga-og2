@@ -81,11 +81,7 @@ export function getRelativeTimeExpression(text) {
     'next month': 'next month',
     'last month': 'last month',
     'next year': 'next year',
-    'last year': 'last year',
-    'next tournament': 'next tournament',
-    'last tournament': 'last tournament',
-    'previous tournament': 'last tournament',
-    'upcoming tournament': 'next tournament'
+    'last year': 'last year'
   };
   
   for (const [key, value] of Object.entries(relativeExpressions)) {
@@ -100,10 +96,9 @@ export function getRelativeTimeExpression(text) {
 /**
  * Get a date based on a relative time expression
  * @param {string} expression - Relative time expression
- * @param {Array} tournamentSchedule - Array of tournament objects with date property
  * @returns {Date} - Calculated date
  */
-export function getDateFromExpression(expression, tournamentSchedule = []) {
+export function getDateFromExpression(expression) {
   const today = new Date();
   
   switch (expression) {
@@ -125,24 +120,6 @@ export function getDateFromExpression(expression, tournamentSchedule = []) {
       return new Date(today.setFullYear(today.getFullYear() + 1));
     case 'last year':
       return new Date(today.setFullYear(today.getFullYear() - 1));
-    case 'next tournament':
-      if (tournamentSchedule && tournamentSchedule.length > 0) {
-        const nextTournament = tournamentSchedule
-          .map(t => ({ ...t, parsedDate: parseDate(t.date) }))
-          .filter(t => t.parsedDate && t.parsedDate > today)
-          .sort((a, b) => a.parsedDate - b.parsedDate)[0];
-        return nextTournament ? nextTournament.parsedDate : today;
-      }
-      return today;
-    case 'last tournament':
-      if (tournamentSchedule && tournamentSchedule.length > 0) {
-        const lastTournament = tournamentSchedule
-          .map(t => ({ ...t, parsedDate: parseDate(t.date) }))
-          .filter(t => t.parsedDate && t.parsedDate <= today)
-          .sort((a, b) => b.parsedDate - a.parsedDate)[0];
-        return lastTournament ? lastTournament.parsedDate : today;
-      }
-      return today;
     default:
       return today;
   }
