@@ -35,7 +35,17 @@
             border-radius: 10px 10px 0 0;
             display: flex;
             justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+        }
+        .header-left {
+            display: flex;
             align-items: center;
+            gap: 15px;
+        }
+        .header-right {
+            flex: 1;
+            max-width: 400px;
         }
         .language-selector {
             display: none;
@@ -241,21 +251,83 @@
                 padding: 8px;
             }
         }
+
+        /* Feedback form styles */
+        .feedback-container {
+            display: none;
+        }
+        .feedback-form {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            width: 100%;
+        }
+        #feedbackInput {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 40px;
+            max-height: 80px;
+            background-color: white;
+            color: #333;
+        }
+        .feedback-submit {
+            align-self: flex-end;
+            padding: 6px 12px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        .feedback-submit:hover {
+            background-color: #218838;
+        }
+        .feedback-submit:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .feedback-status {
+            font-size: 12px;
+            margin-top: 2px;
+            text-align: right;
+        }
+        .feedback-status.success {
+            color: #28a745;
+        }
+        .feedback-status.error {
+            color: #dc3545;
+        }
     </style>
 </head>
 <body>
     <div class="chat-container">
         <div class="chat-header">
-            <h2>HVGA OG</h2>
-            <div class="language-selector">
-                <label for="languageSelect">Language:</label>
-                <select id="languageSelect">
-                    <option value="en-US">English (US)</option>
-                    <option value="vi-VN">Vietnamese</option>
-                </select>
+            <div class="header-left">
+                <h2>HVGA OG</h2>
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span>Connected</span>
+                </div>
             </div>
-            <button id="toggle-auto-send">🔄 Auto-send: ON</button>
+            <div class="header-right">
+                <form class="feedback-form" id="feedbackForm">
+                    <textarea 
+                        id="feedbackInput" 
+                        placeholder="Share your feedback about HVGA ..."
+                        required
+                    ></textarea>
+                    <button type="submit" class="feedback-submit">Submit Feedback</button>
+                    <div id="feedbackStatus" class="feedback-status"></div>
+                </form>
+            </div>
         </div>
+
         <div class="chat-messages" id="chatMessages"></div>
         <div class="input-container">
             <button id="voice-button" title="Start recording">
@@ -283,7 +355,6 @@
         const sendButton = document.getElementById('send-button');
         const voiceButton = document.getElementById('voice-button');
         const languageSelect = document.getElementById('languageSelect');
-        const toggleButton = document.getElementById('toggle-auto-send');
 
         let recognition = null;
         let isRecording = false;
@@ -488,11 +559,6 @@
                 e.preventDefault();
                 sendMessage();
             }
-        });
-
-        toggleButton.addEventListener('click', () => {
-            autoSend = !autoSend;
-            toggleButton.innerHTML = `🔄 Auto-send: ${autoSend ? 'ON' : 'OFF'}`;
         });
 
         // Initialize when the page loads
@@ -737,6 +803,49 @@
 
         // Add initial state to history
         window.history.pushState({}, '', window.location.href);
+
+        // Feedback form handling
+        const feedbackForm = document.getElementById('feedbackForm');
+        const feedbackInput = document.getElementById('feedbackInput');
+        const feedbackStatus = document.getElementById('feedbackStatus');
+
+        feedbackForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const message = feedbackInput.value.trim();
+            if (!message) return;
+
+            try {
+                const response = await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message })
+                });
+
+                if (response.ok) {
+                    feedbackStatus.textContent = 'Thank you for your feedback!';
+                    feedbackStatus.className = 'feedback-status success';
+                    feedbackInput.value = '';
+                    
+                    // Hide success message after 3 seconds
+                    setTimeout(() => {
+                        feedbackStatus.className = 'feedback-status';
+                    }, 3000);
+                } else {
+                    throw new Error('Failed to submit feedback');
+                }
+            } catch (error) {
+                feedbackStatus.textContent = 'Failed to submit feedback. Please try again.';
+                feedbackStatus.className = 'feedback-status error';
+                
+                // Hide error message after 3 seconds
+                setTimeout(() => {
+                    feedbackStatus.className = 'feedback-status';
+                }, 3000);
+            }
+        });
     </script>
 </body>
 </html> 

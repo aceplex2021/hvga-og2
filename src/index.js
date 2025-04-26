@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 import multer from 'multer';
 import { tools } from './tools/index.js';
 import membersRouter from './routes/members.js';
+import feedbackRouter from './routes/feedback.js';
 import { Anthropic } from '@anthropic-ai/sdk';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -44,6 +45,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Add members route
 app.use('/api/members', membersRouter);
+
+// Add feedback route
+app.use('/api/feedback', feedbackRouter);
 
 // Add return URL handling middleware
 app.use((req, res, next) => {
