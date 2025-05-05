@@ -50,8 +50,8 @@ Tournament Schedule:
 •	March 22nd, 2025 - Wilderness Golf Club 8AM Shotgun; Cost: $115
 •	April 12th, 2025 – Greatwood Golf Club 9AM starting tee time; Cost: $100
 •	May 4th, 2025 - Wildcat Golf Club - Lakes Course 1PM tee time; Cost: $115
-•	June 13th, 2025 – TBD
-•	July 12th, 2025 - TBD
+•	June 7th, 2025 – Wilderness 230PM Shotgun; Cost: $115
+•	July 12th, 2025 - Windrose 230PM Shotgun; Cost: $90
 
 Tournament Winners: HVGA features three flights (A, B, and C) and two divisions (Senior and Regular). Players aged 55 and above qualify for the Senior division. All participants, including seniors, compete for gross and net titles within their respective flights. Additionally, seniors have an extra opportunity to win the Senior Net trophy. Players aged 65 and above may tee off from the front tees (one set ahead of the regular men's tees); however, choosing this option forfeits their eligibility for events such as the TX or TC Cups.
 
@@ -64,20 +64,20 @@ C Flight:	Champ GROSS	Linh T NGUYEN	88
 Senior Flight:	Champ NET	Joe NGUYEN	72.3	(92)
 
 December 2024 – Quail Valley Eldorado
-Champ GROSS	Henry DO	77
-Champ NET	Jesse NGUYEN	72.6 (82)
-Champ GROSS	Bobby NGUYEN	78
-Champ NET	Steve NGUYEN	68.9 (80)
-Champ GROSS	Andrew TRAN	86
-Champ NET	Vinh P NGUYEN	67.5 (89)
+A Flight: Champ GROSS	Henry DO	77
+A Flight: Champ NET	Jesse NGUYEN	72.6 (82)
+B Flight: Champ GROSS	Bobby NGUYEN	78
+B Flight: Champ NET	Steve NGUYEN	68.9 (80)
+C Flight: Champ GROSS	Andrew TRAN	86
+Senior Flight: Champ NET	Vinh P NGUYEN	67.5 (89)
 
 January 2025 – Windrose
-Champ GROSS	Henry DO	74
-Champ NET	Joe BUi	70.5 (75)
-Champ GROSS	Angelo HUYNH	78
-Champ NET	Mike TA	 70.5 (82)
-Champ GROSS	Linh Tuong NGUYEN	85
-Champ NET	Luan TRAN	68.3	(93)
+A Flight: Champ GROSS	Henry DO	74
+A Flight: Champ NET	Joe BUi	70.5 (75)
+B Flight: Champ GROSS	Angelo HUYNH	78
+B Flight: Champ NET	Mike TA	 70.5 (82)
+C Flight: Champ GROSS	Linh Tuong NGUYEN	85
+Senior Flight: Champ NET	Luan TRAN	68.3	(93)
 
 February 2025 – Cypress Lakes
 A Flight:	Champ GROSS	Henry DO	72
@@ -101,7 +101,15 @@ A Flight: Champ NET Noah NGUYEN 69
 B Flight: Champ GROSS Jacob To 76
 B Flight: Champ NET Alan Pham 70
 C Flight: Champ GROSS Bao Duy Tran 80
-Senior Flight: Champ NET Minh Do (Playoff) 70>>>
+Senior Flight: Champ NET Minh Do (Playoff) 70
+
+May 2025 – Wildcat Golf Club - Lakes Course
+A Flight: Champ GROSS Richard Le	70
+A Flight: Champ NET	Justin Vu	66 (72)
+B Flight: Champ GROSS Bang Le 73
+B Flight: Champ NET	Kiet Luong 64 (75)
+C Flight: Champ GROSS DaQuy Nguyen 77
+Senior Flight: Champ NET Lanh Xuan Nguyen 58 (76)
 
 Special Events Schedule
 Crawfish Boil: March 29, 2025 (4 PM - 10 PM)
@@ -132,7 +140,7 @@ Year-End Dinner: September 7, 2025
 2025 Texas Cup (Tx cup) event details and qualifications:
 •	Date: Oct. 4th & 5th, 2025
 •	Venue: Waterchase Golf Club in Dallas, TX 
-•	Cost: $400 - $600 plus optional $100 team bet
+•	Cost: estimate $400 - $600 plus optional $100 team bet
 •	Qualifications: minimum 2 tournament rounds, top 30 in lowest combined 2 rounds in 2025 season will automatically qualify, remaining 10-14 will be captain's picks.
 •	10/4: Best balls in the morning and true alternate in the afternoon
 •	10/5: Singles matches; lunch and award ceremony>>>
